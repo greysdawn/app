@@ -10,14 +10,19 @@ import {
 
 import React, {
 	useRef,
-	useState
+	useState,
+	forwardRef,
+	useImperativeHandle as uIH
 } from 'react';
 
-export default function Modal(props) {
+const Modal = forwardRef((props, ref) => {
+	const [open, setOpen] = useState(false);
+
 	var top = useRef(new Animated.Value(1000)).current;
 	var opc = useRef(new Animated.Value(0)).current;
 	
 	function show() {
+		setOpen(true)
 		Animated.timing(top, {
 			toValue: 0,
 			duration: 250,
@@ -43,16 +48,21 @@ export default function Modal(props) {
 			duration: 250,
 			useNativeDriver: false
 		}).start(({finished}) => {
-			if(finished) props.toggle()
+			if(finished) {
+				// props.toggle()
+				setOpen(false);
+			}
 		});
 	}
 
-	if(!props.vis) return null;
+	uIH(ref, () => ({show, hide}));
+
+	if(!open) return null;
 	return (
 		<Mod
 			animationType="none"
 			transparent
-			visible={props.vis}
+			visible={open}
 			statusBarTranslucent
 			onShow={() => show()}
 			onRequestClose={() => {
@@ -81,36 +91,13 @@ export default function Modal(props) {
 				borderWidth: 2,
 				borderColor: 'black'
 			}}>
-			<Text style={{color: '#eee'}}>Are you sure you want to clear everything?</Text>
-			<View style={{
-				flexDirection: 'row',
-				alignItems: 'space-around'
-			}}>
-			<TouchableOpacity style={styles.btn} onPress={() => {hide(); props.clear();}}>
-				<Text style={{color: '#eee'}}>Yes</Text>
-			</TouchableOpacity>
-			<TouchableOpacity style={styles.btn} onPress={() => {hide()}}>
-				<Text style={{color: '#eee'}}>No</Text>
-			</TouchableOpacity>
-			</View>
+			{props.children}
 			</Animated.View>
 			</Pressable>
 			</Animated.View>
 			</Pressable>
 		</Mod>
 	)
-}
-
-const styles = SS.create({
-  btn: {
-  	width: '30%',
-  	margin: 5,
-  	marginBottom: 5,
-  	backgroundColor: '#333',
-  	color: '#eee',
-  	padding: 10,
-  	width: '30%',
-  	borderRadius: 10,
-  	alignItems: 'center'
-  }
 })
+
+export default Modal;

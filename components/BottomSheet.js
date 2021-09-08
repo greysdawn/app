@@ -2,13 +2,10 @@ import {
 	Animated,
 	Pressable,
 	StyleSheet as SS,
-	Text,
 	View,
-	TouchableOpacity,
 	PanResponder,
 	useWindowDimensions,
-	StatusBar,
-	ScrollView
+	StatusBar
 } from 'react-native';
 
 import React, {
@@ -21,47 +18,61 @@ import React, {
 
 const BottomSheet = forwardRef((props, ref) => {
 	const {height, width} = useWindowDimensions();
-	const hgt = height / 4;
-	const min = 100;
+	const [hgt, setHgt] = useState(0);
+	const hgtRef = useRef();
+
+	useEffect(() => { hgtRef.current = hgt; }, [hgt]);
+
+	const min = 0;
 	const sheet = useRef(null);
 	var [open, sO] = useState(props.open ?? true);
 
-	const pan = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
-	const prev = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
+	const pan = useRef(new Animated.ValueXY({x: 0, y: height})).current;
+	const prev = useRef(new Animated.ValueXY({x: 0, y: height})).current;
+
+	function move(e, gS) {
+		var val = prev.y._value + gS.dy;
+		var capped = Math.min(Math.max(val, min), hgtRef.current)
+		
+		pan.setValue({x: 0, y: capped})
+	}
+
+	function end(e, gS) {
+		var val = prev.y._value + gS.dy;
+		var capped = Math.min(Math.max(val, min), hgtRef.current)
+
+		if(capped < hgtRef.current * .5) {
+			prev.setValue({x: 0, y: 0});
+			show();
+		} else {
+			prev.setValue({x: 0, y: hgtRef.current});
+			hide();
+		}
+	}
 
 	const panResp = useRef(PanResponder.create({
 		onMoveShouldSetPanResponder: (e, gS) => Math.abs(gS.dy) > 20,
-		onPanResponderMove: (e, gS) => {
-			var val = prev.y._value - gS.dy;
-			var capped = Math.min(Math.max(val, min), hgt)
-			
-			pan.setValue({x: 0, y: capped})
-		},
-		onPanResponderEnd: (e, gS) => {
-			var val = prev.y._value - gS.dy;
-			var capped = Math.min(Math.max(val, min), hgt)
-			
-			prev.setValue({x: 0, y: capped})
-		}
+		onPanResponderMove: move,
+		onPanResponderEnd: end
 	})).current;
 
 	function show() {
 		sO(true);
 		Animated.timing(pan, {
-			toValue: {x: 0, y: hgt},
-			duration: 100,
+			toValue: {x: 0, y: 0},
+			duration: 250,
 			useNativeDriver: false
-		}).start(({finished}) => {
-			prev.setValue({x: 0, y: hgt})
+		}).start(() => {
+			prev.setValue({x: 0, y: 0})
 		})
 	}
 
 	function hide() {
 		Animated.timing(pan, {
-			toValue: {x: 0, y: 0},
-			duration: 100,
+			toValue: {x: 0, y: hgtRef.current},
+			duration: 250,
 			useNativeDriver: false
-		}).start(({finished}) => {
+		}).start(() => {
 			prev.setValue({x: 0, y: prev.y._value});
 			sO(false)
 		})
@@ -94,26 +105,19 @@ const BottomSheet = forwardRef((props, ref) => {
 			style={[
 				styles.container,
 				{
-					// top: pan.y,
-					maxHeight: pan.y,
-					height: hgt,
+					top: pan.y,
 					width,
 					alignItems: 'center',
 					overflow: "hidden"
 				}
 			]}
 			{...panResp.panHandlers}
+			onLayout={(e) => {
+				var {height: h} = e.nativeEvent.layout;
+				setHgt((cur) => h);
+			}}
 		>
-		<Pressable onPress={(e)=>{
-			e.stopPropagation();
-		}} style={{
-			flex: 1,
-			flexDirection: 'column',
-			alignItems: 'center',
-			width
-		}}>
 		{props.children}
-		</Pressable>
 		</Animated.View>
 		</Pressable>
 		</View>
@@ -126,6 +130,8 @@ const styles = SS.create({
 	container: {
 		backgroundColor: '#333',
 		elevation: 3,
-		bottom: 0
+		bottom: 0,
+		borderTopLeftRadius: 10,
+		borderTopRightRadius: 10,
 	}
 })

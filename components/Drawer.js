@@ -23,7 +23,7 @@ export default function DrawerContent(props) {
 
 const styles = SS.create({
 	sv: {
-		backgroundColor: '#111',
+		backgroundColor: '#000',
 		padding: 10,
 		paddingTop: 0,
 		flex: 1

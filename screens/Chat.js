@@ -11,14 +11,9 @@ import {
 	View,
 	Pressable,
 	FlatList,
-	ToastAndroid,
-	Button,
 	TouchableOpacity,
-	Animated,
 	useWindowDimensions,
-	ScrollView,
-	TouchableHighlight,
-	Easing
+	TouchableHighlight
 } from 'react-native';
 
 import {
@@ -29,6 +24,7 @@ import Message from '../components/Message';
 import Modal from '../components/Modal';
 import Header from '../components/Header';
 import BottomSheet from '../components/BottomSheet';
+import FAB from '../components/FloatingActionButton';
 import axios from 'axios';
 
 const axinst = new axios.create({
@@ -36,7 +32,7 @@ const axinst = new axios.create({
 })
 
 export default function Chat(props) {
-	const { height, width } = useWindowDimensions();
+	const { width } = useWindowDimensions();
 	
 	var [text, setText] = useState(null);
 	var [list, setList] = useState([]);
@@ -49,6 +45,7 @@ export default function Chat(props) {
 
 	var fl = useRef();
 	var BS = useRef();
+	var Mod = useRef();
 	var [refr, sRefr] = useState(false);
 
 	useEffect(() => {
@@ -85,7 +82,7 @@ export default function Chat(props) {
 		console.log(rq.data)
 
 		l.push({
-			key: rq.data.id,
+			key: rq.data.id.toString(),
 			text: rq.data.content,
 			sent: rq.data.sent
 		});
@@ -115,6 +112,14 @@ export default function Chat(props) {
 		BS?.current?.show();
 	}
 
+	function callMod() {
+		Mod?.current?.show();
+	}
+
+	function hideMod() {
+		Mod?.current?.hide();
+	}
+
 	function startEdit(ind) {
 		setText(list[ind].text);
 		setEditing(true);
@@ -125,7 +130,6 @@ export default function Chat(props) {
 		var rq = await axinst.patch('/api/msg/'+list[cedit].key, {
 			text
 		});
-		console.log(rq)
 		var i = {
 			text: rq.data.content,
 			key: rq.data.id.toString(),
@@ -149,8 +153,8 @@ export default function Chat(props) {
 		else sTm(ind)
 	}
 
-	function toggleModal() {
-		sMod(!mod)
+	function toggleModal(val) {
+		sMod(val ?? !mod)
 	}
 
 	function toggleBS(val) {
@@ -162,9 +166,22 @@ export default function Chat(props) {
 			<Header 
 				title="Chat"
 				navigation={props.navigation}
-				headerRight={(props) => (<DBtn {...props} toggle={toggleModal}/>)}
+				headerRight={(props) => (<DBtn {...props} show={callMod}/>)}
 			/>
-			<Modal clear={clear} vis={mod} toggle={toggleModal}/>
+			<Modal clear={clear} vis={mod} toggle={toggleModal} ref={Mod}>
+				<Text style={{color: '#eee'}}>Are you sure you want to clear everything?</Text>
+				<View style={{
+					flexDirection: 'row',
+					alignItems: 'space-around'
+				}}>
+				<TouchableOpacity style={styles.btn} onPress={() => {hideMod(); clear();}}>
+					<Text style={{color: '#eee'}}>Yes</Text>
+				</TouchableOpacity>
+				<TouchableOpacity style={styles.btn} onPress={() => {hideMod()}}>
+					<Text style={{color: '#eee'}}>No</Text>
+				</TouchableOpacity>
+				</View>
+			</Modal>
 			<FlatList
 				contentContainerStyle={{
 					alignItems: 'stretch'
@@ -251,117 +268,11 @@ export default function Chat(props) {
 
 function DBtn(props) {
 	return (
-		<Pressable onPress={() => props.toggle()}>
+		<Pressable onPress={() => props.show()}>
 			<Octicons name='trashcan' size={20} style={{
 				marginRight: 10,
 				color: '#eee',
 			}} />
-		</Pressable>
-	)
-}
-
-function FAB(props) {
-	var [open, sO] = useState(false);
-	var hgt = useRef(new Animated.Value(0)).current;
-	var opc = useRef(new Animated.Value(0)).current;
-	var rotV = useRef(new Animated.Value(0)).current;
-	function tog(e) {
-		e.stopPropagation();
-		if(!open) {
-			sO(true);
-			Animated.timing(hgt, {
-				toValue: 100,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
-			Animated.timing(opc, {
-				toValue: 1,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
-
-			Animated.timing(rotV, {
-				toValue: 1,
-				duration: 250,
-				useNativeDriver: false,
-				// easing: Easing.bezier(0.5, -0.5, 0.5, 1.5)
-			}).start()
-		} else {
-			Animated.timing(opc, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false
-			}).start()			
-			Animated.timing(rotV, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false,
-				// easing: Easing.bezier(0.5, -0.5, 0.5, 1.5)
-			}).start(({finished}) => {
-				if(finished) sO(false)
-			})
-			Animated.timing(hgt, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
-		}
-			
-	}
-
-	// const rot =
-
-	const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-	
-	if(open) {
-		// console.log("rotation", rot)
-		return (
-			<View style={[styles.fab, {overflow: 'hidden'}]}>
-			<Animated.View style={{
-				maxHeight: hgt,
-				opacity: opc,
-				// overflow: 'hidden'
-			}}>
-				<Pressable>
-				<AntDesign name='closecircleo'
-					style={[styles.icon, {marginBottom: 5}]}
-					size={40}
-				/>
-				</Pressable>
-				<Pressable>
-				<AntDesign name='checkcircleo'
-					style={[styles.icon, {marginBottom: 5}]}
-					size={40}
-				/>
-				</Pressable>
-			</Animated.View>
-			<AnimatedPressable onPress={(e) => tog(e)}
-				style={{
-					transform: [{
-						rotate: rotV.interpolate({
-							inputRange: [0, 1],
-							outputRange: ['0deg', '225deg']
-						})
-					}],
-					backgroundColor: '#a5a',
-					borderRadius: 20
-				}}
-			>
-				<AntDesign name='pluscircleo'
-					style={[styles.icon]}
-					size={40}
-				/>
-			</AnimatedPressable>
-			</View>
-		)
-	}
-	
-	return (
-		<Pressable style={styles.fab} onPress={(e) => tog(e)}>
-			<AntDesign name='pluscircleo'
-				style={[styles.icon]}
-				size={40}
-			/>
 		</Pressable>
 	)
 }
@@ -388,23 +299,25 @@ const styles = StyleSheet.create({
   	width: '100%',
   	paddingBottom: 40
   },
-  fab: {
-  	position: 'absolute',
-  	bottom: 80,
-  	right: 11,
-  	backgroundColor: '#a5a',
-  	padding: 0,
-  	borderRadius: 20,
-  	elevation: 3
-  },
   bsBtns: {
-	width: '100%',
-	padding: 10,
-	paddingTop: 20,
-	paddingBottom: 20,
-	flexDirection: 'row',
-	justifyContent: 'flex-start',
-	alignItems: 'center'
+		width: '100%',
+		padding: 10,
+		paddingTop: 20,
+		paddingBottom: 20,
+		flexDirection: 'row',
+		justifyContent: 'flex-start',
+		alignItems: 'center'
+  },
+  btn: {
+  	width: '30%',
+  	margin: 5,
+  	marginBottom: 5,
+  	backgroundColor: '#333',
+  	color: '#eee',
+  	padding: 10,
+  	width: '30%',
+  	borderRadius: 10,
+  	alignItems: 'center'
   }
 });
 
