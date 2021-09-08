@@ -1,0 +1,70 @@
+import React, {useRef, useState} from 'react';
+import { 
+	StyleSheet as SS,
+	Text,
+	View,
+	Pressable,
+	Animated
+} from 'react-native';
+
+import { getHeaderTitle, Header as Hd} from '@react-navigation/elements';
+
+import {
+	AntDesign, Octicons, SimpleLineIcons as SLI
+} from '@expo/vector-icons';
+
+export default function Header(props) {
+	const {navigation, title, shown} = props;
+
+	if(shown === false) return null;
+	return (
+		<View
+			elevation={3}
+			navigation={navigation}
+			style={styles.header}
+			{...props}
+		>
+		<HBtn {...props} navigation={navigation} />
+		<Text style={styles.hText}>{title}</Text>
+		{props.headerRight && (
+			<View style={{
+				marginLeft: 'auto'
+			}}>
+			{props.headerRight({...props})}
+			</View>
+		)}
+		</View>
+	)
+}
+
+function HBtn(props) {
+	const {navigation} = props;
+
+	return (
+		<Pressable onPress={() => navigation.toggleDrawer()}>
+			<SLI name='menu' size={20} style={{
+				color: '#eee',
+				margin: 5,
+				marginLeft: 10
+			}} />
+		</Pressable>
+	)
+}
+
+const styles = SS.create({
+  header: {
+	backgroundColor: '#444',
+	elevation: 3,
+	borderTopLeftRadius: 5,
+	borderTopRightRadius: 5,
+	height: 80-28,
+	flexDirection: 'row',
+	alignItems: 'center',
+	margin: 0,
+	width: '100%'
+  },
+  hText: {
+	color: '#eee',
+	fontSize: 20
+  },
+})
