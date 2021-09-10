@@ -1,17 +1,30 @@
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar as ESB } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet as SS, Text, Pressable, View, useWindowDimensions } from 'react-native';
+import {
+	StyleSheet as SS,
+	Text,
+	Pressable,
+	View,
+	useWindowDimensions,
+	StatusBar as SB
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { SimpleLineIcons as SLI, Octicons } from '@expo/vector-icons';
 
-import Chat from './screens/Chat';
+import Notes from './screens/Notes';
+import Note from './screens/Note';
 import DrawerContent from './components/Drawer';
 import Header from './components/Header';
 import BottomSheet from './components/BottomSheet';
 
+import axios from 'axios';
+axios.defaults.baseURL = 'http://localhost:8080';
+
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
 
 export default function App() {
 	const { height, width } = useWindowDimensions();
@@ -20,28 +33,26 @@ export default function App() {
 		<SafeAreaProvider style={{
 			backgroundColor: '#111'
 		}}>
-		<NavigationContainer>
+		<NavigationContainer theme={{ colors: { background: '#111' } }}>
 		<Drawer.Navigator
 			screenOptions={{
 				drawerType: 'slide',
-				drawerContainerStyle: { height: '100%' },
-				drawerStyle: styles.drawer,
-				drawerItemStyle: styles.item,
+				drawerContainerStyle: { height },
+				drawerStyle: [styles.drawer, { height }],
 				drawerLabelStyle: styles.label,
 				drawerActiveBackgroundColor: '#333',
 				drawerInactiveBackgroundColor: '#0000',
 				swipeEdgeWidth: width,
 				swipeMinDistance: width / 2
-				// header: (props) => (<CHeader {...props} />)
 			}}
-			initialRouteName="Chat"
+			initialRouteName="Notes"
 			drawerContent={(props) => (<DrawerContent {...props} />)}
 		>
-		<Drawer.Screen name="Chat" options={{headerShown: false}} component={Chat} />
+		<Drawer.Screen name="Notes" options={{headerShown: false}} component={NoteNav} />
 		<Drawer.Screen name="Test" options={{headerShown: false}} component={Test} />
 		<Drawer.Screen name="Test2" options={{headerShown: false}} component={Test} />
 		</Drawer.Navigator>
-		<StatusBar style={"light"}/>
+		<SB barStyle={"light-content"} translucent={true}/>
 		</NavigationContainer>
 		</SafeAreaProvider>
 	);
@@ -52,7 +63,7 @@ function Test(props) {
 		<View style={{
 			backgroundColor: '#111',
 			flex: 1,
-			paddingTop: 28
+			paddingTop: SB.currentHeight
 		}}>
 		<Header {...props} title={props.route.name} />
 		<Text style={{color: 'white'}}>This is a test!</Text>
@@ -63,6 +74,26 @@ function Test(props) {
 	)
 }
 
+function NoteNav() {
+	return (
+		<Stack.Navigator
+			initialRouteName="NoteList"
+			screenOptions={{
+				presentation:"modal",
+				// animation: "slide_from_right"
+			}}
+		>
+		<Stack.Group>
+			<Stack.Screen name="NoteList" options={{headerShown: false}} component={Notes} />
+			<Stack.Screen name="Note"
+			options={{
+				headerShown: false
+			}} component={Note} />
+		</Stack.Group>
+		</Stack.Navigator>
+	)
+}
+
 const styles = SS.create({
 	drawer: {
 		backgroundColor: '#333',
@@ -70,9 +101,6 @@ const styles = SS.create({
 		color: '#eee',
 		flex: 1,
 		height: '100%'
-	},
-	item: {
-		// backgroundColor: '#444'
 	},
 	label: {
 		color: '#eee'

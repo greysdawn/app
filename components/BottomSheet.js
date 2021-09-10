@@ -60,7 +60,7 @@ const BottomSheet = forwardRef((props, ref) => {
 		sO(true);
 		Animated.timing(pan, {
 			toValue: {x: 0, y: 0},
-			duration: 250,
+			duration: 150,
 			useNativeDriver: false
 		}).start(() => {
 			prev.setValue({x: 0, y: 0})
@@ -70,7 +70,7 @@ const BottomSheet = forwardRef((props, ref) => {
 	function hide() {
 		Animated.timing(pan, {
 			toValue: {x: 0, y: hgtRef.current},
-			duration: 250,
+			duration: 150,
 			useNativeDriver: false
 		}).start(() => {
 			prev.setValue({x: 0, y: prev.y._value});

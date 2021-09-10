@@ -10,38 +10,41 @@ app.use(express.urlencoded({ extended: true }));
 
 const db = new Pool();
 const stores = require('./stores/__db')();
-console.log(stores);
 
-app.post('/api/msg', async (req, res) => {
-	var m = await stores.messages.create({content: req.body.text})
-	console.log(m);
-	return res.status(200).send(m);
+app.post('/api/notes', async (req, res) => {
+	var n = await stores.notes.create(req.body)
+	return res.status(200).send(n);
 })
 
-app.patch('/api/msg/:id', async (req, res) => {
-	var m = await stores.messages.get(req.params.id);
-	if(!m) return res.status(404).send();
+app.get('/api/notes', async (req, res) => {
+	var notes = await stores.notes.getAll();
+	return res.status(200).send(notes ?? []);
+})
 
-	m = await m.update({
-		content: req.body.text,
+app.get('/api/note/:hid', async (req, res) => {
+	var note = await stores.notes.get(req.params.hid);
+	if(note) return res.status(200).send(note);
+	else return res.status(404).send();
+})
+
+app.patch('/api/note/:hid', async (req, res) => {
+	var n = await stores.notes.get(req.params.hid);
+	if(!n) return res.status(404).send();
+
+	n = await n.update({
+		...req.body,
 		edited: new Date()
 	})
-	return res.status(200).send(m);
+	return res.status(200).send(n);
 })
 
-app.get('/api/msgs', async (req, res) => {
-	var msgs = await stores.messages.getAll();
-	console.log(msgs)
-	return res.status(200).send(msgs ?? []);
-})
-
-app.delete('/api/msg/:id', async (req, res) => {
-	await stores.messages.delete(req.params.id);
+app.delete('/api/note/:hid', async (req, res) => {
+	await stores.notes.delete(req.params.hid);
 	return res.status(200).send()
 })
 
-app.delete('/api/msgs', async (req, res) => {
-	await stores.messages.deleteAll();
+app.delete('/api/notes', async (req, res) => {
+	await stores.notes.deleteAll();
 	return res.status(200).send()
 })
 

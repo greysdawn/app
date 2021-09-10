@@ -16,7 +16,7 @@ import React, {
 } from 'react';
 
 const Modal = forwardRef((props, ref) => {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(props.vis ?? false);
 
 	var top = useRef(new Animated.Value(1000)).current;
 	var opc = useRef(new Animated.Value(0)).current;
@@ -49,7 +49,6 @@ const Modal = forwardRef((props, ref) => {
 			useNativeDriver: false
 		}).start(({finished}) => {
 			if(finished) {
-				// props.toggle()
 				setOpen(false);
 			}
 		});

@@ -13,26 +13,25 @@ import {
 	FlatList,
 	TouchableOpacity,
 	useWindowDimensions,
-	TouchableHighlight
+	TouchableHighlight,
+	StatusBar
 } from 'react-native';
 
 import {
-	AntDesign, Octicons, SimpleLineIcons as SLI
+	AntDesign, Octicons, SimpleLineIcons as SLI,
+	MaterialIcons as MI, FontAwesome5 as FA5
 } from '@expo/vector-icons';
 
-import Message from '../components/Message';
+import NoteCard from '../components/NoteCard';
 import Modal from '../components/Modal';
 import Header from '../components/Header';
 import BottomSheet from '../components/BottomSheet';
 import FAB from '../components/FloatingActionButton';
 import axios from 'axios';
 
-const axinst = new axios.create({
-	baseURL: 'http://localhost:8080'
-})
-
-export default function Chat(props) {
+export default function Notes(props) {
 	const { width } = useWindowDimensions();
+	const { navigation } = props;
 	
 	var [text, setText] = useState(null);
 	var [list, setList] = useState([]);
@@ -42,10 +41,12 @@ export default function Chat(props) {
 	var [fetched, sF] = useState(false);
 	var [mod, sMod] = useState(false);
 	var [bs, sBs] = useState(false);
+	var [upd, sUpd] = useState(false);
 
 	var fl = useRef();
 	var BS = useRef();
 	var Mod = useRef();
+	var fab = useRef();
 	var [refr, sRefr] = useState(false);
 
 	useEffect(() => {
@@ -57,45 +58,30 @@ export default function Chat(props) {
 
 	async function refetch() {
 		sRefr(true);
-		fl.current.scrollToEnd()
-		var d = await axinst.get('/api/msgs');
-		setList(d.data.map(t => {
-			return {
-				key: t.id.toString(),
-				text: t.content,
-				sent: t.sent,
-				edited: t.edited
-			}
-		}));
+		var d = await axios.get('/api/notes');
+		setList(d.data);
 		sRefr(false);
-		fl.current.scrollToEnd()
 	}
 	
 	async function addMsg() {
 		if(!text) return;
 		var l = list;
 		try {
-			var rq = await axinst.post('/api/msg', {text: text.trim()})
+			var rq = await axios.post('/api/note', {content: text.trim()})
 		} catch(e) {
 			console.log(e)
 		}
-		console.log(rq.data)
 
-		l.push({
-			key: rq.data.id.toString(),
-			text: rq.data.content,
-			sent: rq.data.sent
-		});
+		l.push(rq.data);
 		setList(l);
 		setText(null);
 		fl.current.scrollToEnd()
 	}
 
 	async function del(ind) {
-		var k = list[ind].key;
-		var rq = await axinst.delete('/api/msg/'+k);
-		var l = list.filter(x => x.key != k);
-		setList(l)
+		var k = list[ind].hid;
+		var rq = await axios.delete('/api/note/'+k);
+		refetch()
 		BS?.current?.hide();
 	}
 
@@ -104,7 +90,8 @@ export default function Chat(props) {
 		sCed(null);
 		setText(null)
 		setList([]);
-		await axinst.delete('/api/msgs');
+		sTm(null)
+		await axios.delete('/api/notes');
 	}
 
 	function callBS(ind) {
@@ -121,36 +108,17 @@ export default function Chat(props) {
 	}
 
 	function startEdit(ind) {
-		setText(list[ind].text);
-		setEditing(true);
+		navigation.navigate("Note", {
+			note: list[ind],
+			i: ind,
+			save
+		})
 		BS?.current?.hide();
 	}
 
-	async function setEdit() {
-		var rq = await axinst.patch('/api/msg/'+list[cedit].key, {
-			text
-		});
-		var i = {
-			text: rq.data.content,
-			key: rq.data.id.toString(),
-			...rq.data
-		}
-		list[cedit] = i;
-		setList(list);
-		setText(null);
-		setEditing(false);
-		sCed(null);
-	}
-
-	function cancelEdit() {
-		setText(null);
-		setEditing(false);
-		sCed(null);
-	}
-
-	function setTime(ind) {
-		if(ind == tm) sTm(null)
-		else sTm(ind)
+	function save(index) {
+		refetch()
+		if(index && list[index]) fl.current.scrollToIndex({index});
 	}
 
 	function toggleModal(val) {
@@ -164,11 +132,12 @@ export default function Chat(props) {
 	return (
 		<View style={styles.container}>	
 			<Header 
-				title="Chat"
+				title="Notes"
 				navigation={props.navigation}
-				headerRight={(props) => (<DBtn {...props} show={callMod}/>)}
-			/>
-			<Modal clear={clear} vis={mod} toggle={toggleModal} ref={Mod}>
+			>
+				<DBtn show={callMod}/>
+			</Header>
+			<Modal ref={Mod}>
 				<Text style={{color: '#eee'}}>Are you sure you want to clear everything?</Text>
 				<View style={{
 					flexDirection: 'row',
@@ -183,6 +152,15 @@ export default function Chat(props) {
 				</View>
 			</Modal>
 			<FlatList
+				keyExtractor={(item) => item.hid}
+				extraData={upd}
+				getItemLayout = {(data, index) => (
+					{
+						length: 47,
+						offset: index * 47,
+						index
+					}
+				)}
 				contentContainerStyle={{
 					alignItems: 'stretch'
 				}}
@@ -191,54 +169,49 @@ export default function Chat(props) {
 				renderItem={({item, index}) => {
 					return (
 						<Pressable onLongPress={() => callBS(index)}
-							onPress={() => setTime(index)}>
-							<Message m={item} i={index} tm={tm == index}/>
+							onPress={() => navigation.navigate('Note', {
+								note: item,
+								i: index,
+								save
+							})}>
+							<NoteCard m={item} />
 						</Pressable>
 					)
 				}}
 				ref={fl}
 				onRefresh={() => refetch()}
 				refreshing={refr}
-				keyboardShouldPersistTaps="always"
 			/>
-			<FAB />
-			<View style={{
-				width: '100%',
-				flex: 0,
-				flexDirection: 'row',
-				justifyContent: 'space-between',
-				alignItems: 'center',
-				borderWidth: 1,
-				borderColor: '#eee',
-				borderRadius: 5,
-				padding: 5
-			}} >
-				<TextInput
-					style={styles.input}
-					placeholder='text here'
-					placeholderTextColor={'#aaa'}
-					onChangeText={setText}
-					value={text}
-					multiline
-				/>
-				<Pressable
-					onPress={() => editing ? setEdit() : addMsg()}
-				>
-				<AntDesign name={editing ? 'checkcircleo' : 'rightcircleo'}
-					style={styles.icon}
-					size={40}
+			<FAB ref={fab}>
+				<Pressable onPress={(e) => {
+					fab?.current?.close(e);
+					console.log(fab)
+					navigation.navigate("Note", {
+						note: {},
+						i: list.length,
+						save
+					});
+				}}>
+				<MI name='notes'
+					style={[styles.icon, {
+						marginBottom: 5
+					}]}
+					size={60}
 				/>
 				</Pressable>
-				{editing && (
-					<Pressable onPress={() => cancelEdit()}>
-					<AntDesign name='closecircleo'
-						style={styles.icon}
-						size={40}
-					/>
-					</Pressable>
-				)}
-			</View>
+			</FAB>
 			<BottomSheet open={bs} toggle={toggleBS} ref={BS}>
+				<Text style={{
+					color: '#eee',
+					fontSize: 20,
+					fontWeight: 'bold',
+					padding: 5,
+					paddingLeft: 10,
+					textAlign: 'left',
+					width
+				}}>
+					{list[cedit].title}
+				</Text>
 				<TouchableHighlight onPress={() => {
 					startEdit(cedit)
 				}} underlayColor='#444'>
@@ -268,8 +241,10 @@ export default function Chat(props) {
 
 function DBtn(props) {
 	return (
-		<Pressable onPress={() => props.show()}>
-			<Octicons name='trashcan' size={20} style={{
+		<Pressable onPress={() => props.show()} style={{
+			marginLeft: 'auto'
+		}}>
+			<FA5 name='trash-alt' size={20} style={{
 				marginRight: 10,
 				color: '#eee',
 			}} />
@@ -282,8 +257,7 @@ const styles = StyleSheet.create({
   	flex: 1,
     backgroundColor: '#111',
     color: '#eee',
-    padding: 5,
-    paddingTop: 28
+    paddingTop: StatusBar.currentHeight
   },
   input: {
   	width: '70%',
@@ -318,6 +292,9 @@ const styles = StyleSheet.create({
   	width: '30%',
   	borderRadius: 10,
   	alignItems: 'center'
-  }
+  },
+  icon: {
+	color: '#eee'
+  },
 });
 

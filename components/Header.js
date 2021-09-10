@@ -26,29 +26,43 @@ export default function Header(props) {
 		>
 		<HBtn {...props} navigation={navigation} />
 		<Text style={styles.hText}>{title}</Text>
-		{props.headerRight && (
-			<View style={{
-				marginLeft: 'auto'
-			}}>
-			{props.headerRight({...props})}
-			</View>
-		)}
+		{props.children}
 		</View>
 	)
 }
 
 function HBtn(props) {
-	const {navigation} = props;
-
-	return (
-		<Pressable onPress={() => navigation.toggleDrawer()}>
-			<SLI name='menu' size={20} style={{
-				color: '#eee',
-				margin: 5,
-				marginLeft: 10
-			}} />
-		</Pressable>
-	)
+	const {
+		navigation,
+		buttonType:type,
+		size,
+		onBack
+	} = props;
+	if(type == "back") {
+		return (
+			<Pressable onPress={() => {
+				if(onBack) {
+					onBack().then(() => navigation.goBack());
+				} else navigation.goBack();
+			}}>
+				<AntDesign name='arrowleft' size={size ?? 20} style={{
+					color: '#eee',
+					margin: 5,
+					marginLeft: 10
+				}} />
+			</Pressable>
+		)
+	} else {
+		return (
+			<Pressable onPress={() => navigation.toggleDrawer()}>
+				<SLI name='menu' size={size ?? 20} style={{
+					color: '#eee',
+					margin: 5,
+					marginLeft: 10
+				}} />
+			</Pressable>
+		)
+	}
 }
 
 const styles = SS.create({

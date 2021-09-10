@@ -1,6 +1,8 @@
 import React, {
 	useState,
-	useRef
+	useRef,
+	forwardRef,
+	useImperativeHandle as uIH
 } from 'react';
 
 import { 
@@ -14,7 +16,7 @@ import {
 	AntDesign, Octicons, SimpleLineIcons as SLI
 } from '@expo/vector-icons';
 
-export default function FloatingActionButton(props) {
+export default FloatingActionButton = forwardRef((props, ref) => {
 	var [open, sO] = useState(false);
 	var hgt = useRef(new Animated.Value(0)).current;
 	var opc = useRef(new Animated.Value(0)).current;
@@ -23,44 +25,55 @@ export default function FloatingActionButton(props) {
 	function tog(e) {
 		e.stopPropagation();
 		if(!open) {
-			sO(true);
-			Animated.timing(hgt, {
-				toValue: 100,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
-			Animated.timing(opc, {
-				toValue: 1,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
-
-			Animated.timing(rotV, {
-				toValue: 1,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
+			show(e)
 		} else {
-			Animated.timing(opc, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false
-			}).start()			
-			Animated.timing(rotV, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false
-			}).start(({finished}) => {
-				if(finished) sO(false)
-			})
-			Animated.timing(hgt, {
-				toValue: 0,
-				duration: 250,
-				useNativeDriver: false
-			}).start()
+			close(e)
 		}
-			
 	}
+
+	function show(e) {
+		e.stopPropagation();
+		sO(true);
+		Animated.timing(hgt, {
+			toValue: 100,
+			duration: 250,
+			useNativeDriver: false
+		}).start()
+		Animated.timing(opc, {
+			toValue: 1,
+			duration: 250,
+			useNativeDriver: false
+		}).start()
+
+		Animated.timing(rotV, {
+			toValue: 1,
+			duration: 250,
+			useNativeDriver: false
+		}).start()
+	}
+
+	function close(e) {
+		e.stopPropagation();
+		Animated.timing(opc, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: false
+		}).start()			
+		Animated.timing(rotV, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: false
+		}).start(({finished}) => {
+			if(finished) sO(false)
+		})
+		Animated.timing(hgt, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: false
+		}).start()
+	}
+
+	uIH(ref, () => ({show, close}));
 
 	const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 	
@@ -71,18 +84,7 @@ export default function FloatingActionButton(props) {
 				maxHeight: hgt,
 				opacity: opc
 			}}>
-				<Pressable>
-				<AntDesign name='closecircleo'
-					style={[styles.icon, {marginBottom: 5}]}
-					size={40}
-				/>
-				</Pressable>
-				<Pressable>
-				<AntDesign name='checkcircleo'
-					style={[styles.icon, {marginBottom: 5}]}
-					size={40}
-				/>
-				</Pressable>
+				{props.children}
 			</Animated.View>
 			<AnimatedPressable onPress={(e) => tog(e)}
 				style={{
@@ -92,13 +94,12 @@ export default function FloatingActionButton(props) {
 							outputRange: ['0deg', '225deg']
 						})
 					}],
-					backgroundColor: '#a5a',
-					borderRadius: 20
+					borderRadius: 30
 				}}
 			>
 				<AntDesign name='pluscircleo'
 					style={[styles.icon]}
-					size={40}
+					size={60}
 				/>
 			</AnimatedPressable>
 			</View>
@@ -109,11 +110,11 @@ export default function FloatingActionButton(props) {
 		<Pressable style={styles.fab} onPress={(e) => tog(e)}>
 			<AntDesign name='pluscircleo'
 				style={[styles.icon]}
-				size={40}
+				size={60}
 			/>
 		</Pressable>
 	)
-}
+})
 
 const styles = SS.create({
 	icon: {
@@ -121,11 +122,10 @@ const styles = SS.create({
 	},
 	fab: {
 		position: 'absolute',
-		bottom: 80,
+		bottom: 65,
 		right: 11,
-		backgroundColor: '#a5a',
 		padding: 0,
 		borderRadius: 20,
 		elevation: 3
-  }
+    }
 });
