@@ -210,7 +210,7 @@ export default function Notes(props) {
 					textAlign: 'left',
 					width
 				}}>
-					{list[cedit].title}
+					{list[cedit]?.title}
 				</Text>
 				<TouchableHighlight onPress={() => {
 					startEdit(cedit)
