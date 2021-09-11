@@ -1,9 +1,7 @@
-import { StatusBar as ESB } from 'expo-status-bar';
 import React from 'react';
 import {
 	StyleSheet as SS,
 	Text,
-	Pressable,
 	View,
 	useWindowDimensions,
 	StatusBar as SB
@@ -12,7 +10,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SimpleLineIcons as SLI, Octicons } from '@expo/vector-icons';
 
 import Notes from './screens/Notes';
 import Note from './screens/Note';
@@ -79,8 +76,8 @@ function NoteNav() {
 		<Stack.Navigator
 			initialRouteName="NoteList"
 			screenOptions={{
-				presentation:"modal",
-				// animation: "slide_from_right"
+				// presentation:"modal",
+				animation: "slide_from_right"
 			}}
 		>
 		<Stack.Group>

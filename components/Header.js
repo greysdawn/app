@@ -1,16 +1,13 @@
-import React, {useRef, useState} from 'react';
+import React from 'react';
 import { 
 	StyleSheet as SS,
 	Text,
 	View,
 	Pressable,
-	Animated
 } from 'react-native';
 
-import { getHeaderTitle, Header as Hd} from '@react-navigation/elements';
-
 import {
-	AntDesign, Octicons, SimpleLineIcons as SLI
+	AntDesign, SimpleLineIcons as SLI
 } from '@expo/vector-icons';
 
 export default function Header(props) {

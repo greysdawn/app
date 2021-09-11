@@ -1,7 +1,6 @@
 import React, {
 	useState,
 	useRef,
-	useEffect
 } from 'react';
 
 import { 
@@ -10,13 +9,12 @@ import {
 	TextInput,
 	View,
 	Pressable,
-	FlatList,
 	TouchableOpacity,
 	useWindowDimensions,
-	TouchableHighlight,
 	BackHandler,
 	StatusBar,
-	ActivityIndicator
+	ActivityIndicator,
+	ScrollView
 } from 'react-native';
 
 import {
@@ -24,8 +22,10 @@ import {
 } from '@react-navigation/native';
 
 import {
-	AntDesign, Entypo, FontAwesome5 as FA5
+	FontAwesome5 as FA5
 } from '@expo/vector-icons';
+
+import Markdown from 'react-native-markdown-display';
 
 import axios from 'axios';
 import Header from '../components/Header';
@@ -38,6 +38,8 @@ export default Note = ({route, navigation}) => {
 	var [content, sCon] = useState(note.content);
 	var [title, sTi] = useState(note.title);
 	var [lo, sLo] = useState(false);
+	var [foc, sFoc] = useState(false);
+	var [sel, sSel] = useState({start: 0, end: 0});
 
 	var mod = useRef();
 
@@ -64,6 +66,8 @@ export default Note = ({route, navigation}) => {
 		sNote(rs.data);
 		if(onSave) onSave(i);
 		sLo(false)
+		sFoc(false)
+		sSel({start: 0, end: 0})
 	}
 
 	async function del() {
@@ -114,9 +118,12 @@ export default Note = ({route, navigation}) => {
 			}}>
 			<FA5 name="save" size={20} style={styles.t}/>
 			</Pressable>
-			<Pressable onPress={() => showMod()} style={{
-				// marginLeft: 'auto'
-			}}>
+
+			<Pressable onPress={() => sFoc(true)}>
+			<FA5 name="edit" size={20} style={styles.t}/>
+			</Pressable>
+
+			<Pressable onPress={() => showMod()}>
 			<FA5 name="trash-alt" size={20} style={styles.t}/>
 			</Pressable>
 		</Header>
@@ -147,20 +154,31 @@ export default Note = ({route, navigation}) => {
 		onChangeText={sTi}
 		/>
 		<View style={{width, flex: 1}}>
-		<TextInput style={[
-			styles.t,
-			{
-				flex: 1,
-				width,
-			}
-		]}
-		placeholder="Content"
-		placeholderTextColor='#aaa5'
-		value={content}
-		onChangeText={sCon}
-		textAlignVertical='top'
-		multiline
-		/>
+		{(!content || foc) && (
+			<TextInput style={[
+				styles.t,
+				{
+					flex: 1,
+					width,
+				}
+			]}
+			placeholder="Content"
+			placeholderTextColor='#aaa5'
+			value={content || null}
+			onChangeText={sCon}
+			textAlignVertical='top'
+			multiline
+			autoFocus
+			onFocus={() => { sFoc(true); }}
+			/>
+		)}
+		{(!foc && content?.trim()?.length > 0) && (
+			<ScrollView >
+			<Markdown style={tstyle}>
+			{content}
+			</Markdown>
+			</ScrollView>
+		)}
 		</View>
 		</View>
 	)
@@ -179,7 +197,7 @@ const styles = SS.create({
 	tit: {
 		fontSize: 20,
 		paddingTop: 20,
-		borderColor: '#111',
+		borderColor: '#ffffff05',
 		borderBottomWidth: 2,
 	},
 	btn: {
@@ -194,3 +212,21 @@ const styles = SS.create({
 	  	alignItems: 'center'
 	},
 })
+
+const tstyle = {
+	body: {
+		flexShrink: 0,
+		color: '#eee',
+		width: '100%',
+		maxWidth: '100%',
+		padding: 5,
+		margin: 0,
+		elevation: 1,
+		flex: 1,
+	  	height: '100%'
+	},
+	blockquote: {
+		backgroundColor: '#ca51',
+		borderColor: '#ccaa55'
+	}
+}

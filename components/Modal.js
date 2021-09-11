@@ -3,9 +3,6 @@ import {
 	Animated,
 	Pressable,
 	StyleSheet as SS,
-	Text,
-	View,
-	TouchableOpacity
 } from 'react-native';
 
 import React, {
@@ -69,27 +66,10 @@ const Modal = forwardRef((props, ref) => {
 			}}
 		>
 			<Pressable onPress={() => hide()}>
-			<Animated.View style={{
-				alignItems: 'center',
-				justifyContent: 'center',
-				backgroundColor: '#000a',
-				height: '100%',
-				width: '100%',
-				opacity: opc
-			}}
+			<Animated.View style={[styles.pView, { opacity: opc }]}
 			>
 			<Pressable onPress={(e) => e.stopPropagation()}>
-			<Animated.View style={{
-				backgroundColor: '#111',
-				padding: 10,
-				borderRadius: 10,
-				margin: 'auto',
-				width: 'auto',
-				alignItems: 'center',
-				top: top,
-				borderWidth: 2,
-				borderColor: 'black'
-			}}>
+			<Animated.View style={[styles.cView, { top }]}>
 			{props.children}
 			</Animated.View>
 			</Pressable>
@@ -100,3 +80,23 @@ const Modal = forwardRef((props, ref) => {
 })
 
 export default Modal;
+
+const styles = SS.create({
+	pView: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: '#000a',
+		height: '100%',
+		width: '100%',
+	},
+	cView: {
+		backgroundColor: '#111',
+		padding: 10,
+		borderRadius: 10,
+		margin: 'auto',
+		width: 'auto',
+		alignItems: 'center',
+		borderWidth: 2,
+		borderColor: 'black'
+	}
+})

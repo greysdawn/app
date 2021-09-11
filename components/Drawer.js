@@ -5,13 +5,12 @@ import {
 } from 'react-native';
 import React from 'react';
 import {
-	DrawerContentScrollView,
 	DrawerItemList
 } from '@react-navigation/drawer';
 import { View, useWindowDimensions } from 'react-native';
 
 export default function DrawerContent(props) {
-	const { height, width } = useWindowDimensions();
+	const { height } = useWindowDimensions();
 	
 	return (
 		<ScrollView {...props} style={[

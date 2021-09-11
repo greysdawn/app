@@ -13,16 +13,17 @@ import {
 } from 'react-native';
 
 import {
-	AntDesign, Octicons, SimpleLineIcons as SLI
+	AntDesign
 } from '@expo/vector-icons';
 
-export default FloatingActionButton = forwardRef((props, ref) => {
+export default FloatingActionMenu = forwardRef((props, ref) => {
 	var [open, sO] = useState(false);
 	var hgt = useRef(new Animated.Value(0)).current;
 	var opc = useRef(new Animated.Value(0)).current;
 	var rotV = useRef(new Animated.Value(0)).current;
 
 	function tog(e) {
+		console.log('toggling?')
 		e.stopPropagation();
 		if(!open) {
 			show(e)
@@ -86,7 +87,10 @@ export default FloatingActionButton = forwardRef((props, ref) => {
 			}}>
 				{props.children}
 			</Animated.View>
-			<AnimatedPressable onPress={(e) => tog(e)}
+			<AnimatedPressable onPress={(e) => {
+				console.log('pressed')
+				tog(e)
+			}}
 				style={{
 					transform: [{
 						rotate: rotV.interpolate({

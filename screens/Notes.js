@@ -7,7 +7,6 @@ import React, {
 import { 
 	StyleSheet,
 	Text,
-	TextInput,
 	View,
 	Pressable,
 	FlatList,
@@ -26,7 +25,7 @@ import NoteCard from '../components/NoteCard';
 import Modal from '../components/Modal';
 import Header from '../components/Header';
 import BottomSheet from '../components/BottomSheet';
-import FAB from '../components/FloatingActionButton';
+import FAM from '../components/FloatingActionMenu';
 import axios from 'axios';
 
 export default function Notes(props) {
@@ -35,13 +34,10 @@ export default function Notes(props) {
 	
 	var [text, setText] = useState(null);
 	var [list, setList] = useState([]);
-	var [editing, setEditing] = useState(false);
 	var [cedit, sCed] = useState(null);
-	var [tm, sTm] = useState(null);
 	var [fetched, sF] = useState(false);
 	var [mod, sMod] = useState(false);
 	var [bs, sBs] = useState(false);
-	var [upd, sUpd] = useState(false);
 
 	var fl = useRef();
 	var BS = useRef();
@@ -86,11 +82,9 @@ export default function Notes(props) {
 	}
 
 	async function clear() {
-		setEditing(false);
 		sCed(null);
 		setText(null)
 		setList([]);
-		sTm(null)
 		await axios.delete('/api/notes');
 	}
 
@@ -153,7 +147,6 @@ export default function Notes(props) {
 			</Modal>
 			<FlatList
 				keyExtractor={(item) => item.hid}
-				extraData={upd}
 				getItemLayout = {(data, index) => (
 					{
 						length: 47,
@@ -182,10 +175,9 @@ export default function Notes(props) {
 				onRefresh={() => refetch()}
 				refreshing={refr}
 			/>
-			<FAB ref={fab}>
+			<FAM ref={fab}>
 				<Pressable onPress={(e) => {
 					fab?.current?.close(e);
-					console.log(fab)
 					navigation.navigate("Note", {
 						note: {},
 						i: list.length,
@@ -199,7 +191,7 @@ export default function Notes(props) {
 					size={60}
 				/>
 				</Pressable>
-			</FAB>
+			</FAM>
 			<BottomSheet open={bs} toggle={toggleBS} ref={BS}>
 				<Text style={{
 					color: '#eee',

@@ -1,10 +1,9 @@
-import React, {useRef, useState} from 'react';
+import React from 'react';
 import {
 	Text,
 	View,
 	StyleSheet as SS
 } from 'react-native';
-import Markdown from 'react-native-markdown-display';
 
 export default function NoteCard(props) {
 	var {m} = props;
