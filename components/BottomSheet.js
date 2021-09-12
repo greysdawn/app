@@ -25,7 +25,7 @@ const BottomSheet = forwardRef((props, ref) => {
 
 	const min = 0;
 	const sheet = useRef(null);
-	var [open, sO] = useState(props.open ?? true);
+	var [open, sO] = useState(props.open ?? false);
 
 	const pan = useRef(new Animated.ValueXY({x: 0, y: height})).current;
 	const prev = useRef(new Animated.ValueXY({x: 0, y: height})).current;

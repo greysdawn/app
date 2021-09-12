@@ -18,7 +18,7 @@ import Header from './components/Header';
 import BottomSheet from './components/BottomSheet';
 
 import axios from 'axios';
-axios.defaults.baseURL = 'http://localhost:8080';
+axios.defaults.baseURL = 'https://notes.greysdawn.com';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();

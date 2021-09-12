@@ -20,7 +20,7 @@ export default function NoteCard(props) {
 
 const styles = SS.create({
 	body: {
-		flexShrink: 0,
+		flex: 1,
 		color: '#eee',
 		backgroundColor: '#333',
 		padding: 10,

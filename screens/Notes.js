@@ -17,13 +17,9 @@ import {
 } from 'react-native';
 
 import {
-	AntDesign, Octicons, SimpleLineIcons as SLI,
+	AntDesign, Octicons,
 	MaterialIcons as MI, FontAwesome5 as FA5
 } from '@expo/vector-icons';
-
-import {
-	useFocusEffect
-} from '@react-navigation/native';
 
 import NoteCard from '../components/NoteCard';
 import Modal from '../components/Modal';
@@ -37,15 +33,14 @@ export default function Notes(props) {
 	const { navigation } = props;
 
 	var [list, setList] = useState([]);
-	var [cedit, sCed] = useState(null);
-	var [mod, sMod] = useState(false);
-	var [bs, sBs] = useState(false);
+	var [cedit, sCed] = 	useState(null);
+	var [sel, sSel] = 		useState(null)
+	var [refr, sRefr] = 	useState(false);
 
-	var fl = useRef();
-	var BS = useRef();
-	var Mod = useRef();
-	var fab = useRef();
-	var [refr, sRefr] = useState(false);
+	var fl = 		useRef();
+	var BS = 		useRef();
+	var Mod = 	useRef();
+	var fab = 	useRef();
 
 	useEffect(() => {
 		const unsubscribe = navigation.addListener('focus', () => {
@@ -61,24 +56,10 @@ export default function Notes(props) {
 		setList(d.data);
 		sRefr(false);
 	}
-	
-	async function addMsg() {
-		if(!text) return;
-		var l = list;
-		try {
-			var rq = await axios.post('/api/note', {content: text.trim()})
-		} catch(e) {
-			console.log(e)
-		}
-
-		l.push(rq.data);
-		setList(l);
-		fl.current.scrollToEnd()
-	}
 
 	async function del(ind) {
 		var k = list[ind].hid;
-		var rq = await axios.delete('/api/note/'+k);
+		await axios.delete('/api/note/'+k);
 		refetch()
 		BS?.current?.hide();
 	}
@@ -109,12 +90,35 @@ export default function Notes(props) {
 		BS?.current?.hide();
 	}
 
-	function toggleModal(val) {
-		sMod(val ?? !mod)
+	function startSelect(ind) {
+		sSel([ind]);
+		BS?.current?.hide();
 	}
 
-	function toggleBS(val) {
-		sBs(val ?? !bs)
+	function addSelect(ind) {
+		var s = Object.assign([], sel);
+		s.push(ind);
+		sSel(s)
+	}
+
+	function removeSelect(ind) {
+		var s = sel;
+		s = s.filter(x => x !== ind);
+		if(s.length == 0) sSel(null);
+		else sSel(s);
+	}
+
+	function clearSelect() {
+		sSel(null);
+	}
+
+	async function delSelected() {
+		await axios.delete('/api/notes/mass', {
+			data: [sel.map(s => list[s].hid)]
+		});
+
+		sSel(null);
+		refetch();
 	}
 	
 	return (
@@ -124,14 +128,26 @@ export default function Notes(props) {
 				navigation={props.navigation}
 			>
 				<DBtn show={callMod}/>
+				{sel && (
+					<Pressable onPress={() => clearSelect()}>
+					<MI name="cancel" size={20} style={{color: '#eee', marginLeft: 5, marginRight: 5}} />
+					</Pressable>
+				)}
 			</Header>
 			<Modal ref={Mod}>
-				<Text style={{color: '#eee'}}>Are you sure you want to clear everything?</Text>
+				{sel && (<Text style={{color: '#eee'}}>Are you sure you want to delete the selected note(s)?</Text>)}
+				{cedit !== null && (<Text style={{color: '#eee'}}>Are you sure you want to delete this note?</Text>)}
+				{(!sel && cedit == null) && (<Text style={{color: '#eee'}}>Are you sure you want to delete everything?</Text>)}
 				<View style={{
 					flexDirection: 'row',
 					alignItems: 'space-around'
 				}}>
-				<TouchableOpacity style={styles.btn} onPress={() => {hideMod(); clear();}}>
+				<TouchableOpacity style={styles.btn} onPress={() => {
+						hideMod();
+						if(sel) delSelected();
+						else if(cedit !== null) del(cedit);
+						else clear();
+				}}>
 					<Text style={{color: '#eee'}}>Yes</Text>
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.btn} onPress={() => {hideMod()}}>
@@ -155,10 +171,23 @@ export default function Notes(props) {
 				data={list}
 				renderItem={({item, index}) => {
 					return (
-						<Pressable onLongPress={() => callBS(index)}
-							onPress={() => navigation.navigate('Note', {
-								note: item.hid
-							})}>
+						<Pressable onLongPress={() => {
+							if(!sel) callBS(index);
+							else return;
+						}}
+							onPress={() => {
+								if(sel) {
+									if(sel.includes(index)) removeSelect(index);
+									else addSelect(index);
+								} else {
+									navigation.navigate('Note', {
+										note: item.hid
+									})}
+							}} style={{
+								flexDirection: 'row',
+								alignItems: 'center'
+							}}>
+							{(sel) && (<MI name={sel.includes(index) ? "check-box" : "check-box-outline-blank"} size={20} style={{color: '#eee', margin: 5}} />)}
 							<NoteCard m={item} />
 						</Pressable>
 					)
@@ -169,6 +198,7 @@ export default function Notes(props) {
 			/>
 			<FAM ref={fab}>
 				<Pressable onPress={(e) => {
+					sSel(null)
 					fab?.current?.close(e);
 					navigation.navigate("Note", {
 						note: ''
@@ -182,7 +212,7 @@ export default function Notes(props) {
 				/>
 				</Pressable>
 			</FAM>
-			<BottomSheet open={bs} toggle={toggleBS} ref={BS}>
+			<BottomSheet ref={BS}>
 				<Text style={{
 					color: '#eee',
 					fontSize: 20,
@@ -192,7 +222,7 @@ export default function Notes(props) {
 					textAlign: 'left',
 					width
 				}}>
-					{list[cedit]?.title}
+					{list[cedit]?.title ?? "Untitled Note"}
 				</Text>
 				<TouchableHighlight onPress={() => {
 					startEdit(cedit)
@@ -206,7 +236,7 @@ export default function Notes(props) {
 				</View>
 				</TouchableHighlight>
 				<TouchableHighlight onPress={() => {
-					del(cedit)
+					callMod();
 				}} underlayColor='#444'>
 				<View style={[styles.bsBtns, {width}]}>
 				<Octicons name='trashcan' size={20} style={{
@@ -214,6 +244,17 @@ export default function Notes(props) {
 					marginRight: 5
 				}} />
 				<Text style={{color: '#eee'}}>Delete</Text>
+				</View>
+				</TouchableHighlight>
+				<TouchableHighlight onPress={() => {
+					startSelect(cedit)
+				}} underlayColor='#444'>
+				<View style={[styles.bsBtns, {width}]}>
+				<MI name='check-box' size={20} style={{
+					color: '#eee',
+					marginRight: 5
+				}} />
+				<Text style={{color: '#eee'}}>Select</Text>
 				</View>
 				</TouchableHighlight>
 			</BottomSheet>

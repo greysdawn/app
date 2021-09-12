@@ -40,11 +40,10 @@ export default Note = ({route, navigation}) => {
 	var [title, sTi] = useState(note.title);
 	var [lo, sLo] = useState(false);
 	var [foc, sFoc] = useState(false);
-	var [sel, sSel] = useState({start: 0, end: 0});
 
 	var mod = useRef();
 
-	const {height, width} = useWindowDimensions();
+	const {width} = useWindowDimensions();
 
 	async function fetch() {
 		if(!hid) return;
@@ -77,15 +76,12 @@ export default Note = ({route, navigation}) => {
 		sNote(rs.data);
 		sLo(false)
 		sFoc(false)
-		sSel({start: 0, end: 0})
-		return;
 	}
 
 	async function del() {
 		if(!note.hid) return navigation.goBack();
 
 		await axios.delete(`/api/note/${note.hid}`);
-		if(onSave) onSave();
 		navigation.goBack();
 	}
 
@@ -97,17 +93,17 @@ export default Note = ({route, navigation}) => {
 		mod?.current?.hide();
 	}
 
-	useFocusEffect(React.useCallback(() => {
-		const handle = () => {
-			save().then(() => {
-				return false;
-			});
-		}
+	const handle = () => {
+		save().then(() => {
+			return false
+		});
+	}
 
+	useFocusEffect(React.useCallback(() => {
 		BackHandler.addEventListener('hardwareBackPress', handle);
 
 		return () => BackHandler.removeEventListener('hardwareBackPress', handle);
-	}, [title, content]));
+	}, [note, title, content]));
 
 	useEffect(() => {
 		const unsubscribe = navigation.addListener('focus', () => {
