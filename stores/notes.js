@@ -118,6 +118,15 @@ class NoteStore {
 
 		return;
 	}
+
+	async deleteMass(ids) {
+		await this.#db.query(`
+			DELETE FROM notes
+			WHERE hid IN ($1)
+		`, [ids]);
+
+		return;
+	}
 }
 
 module.exports = (db) => new NoteStore(db);
