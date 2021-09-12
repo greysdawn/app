@@ -122,7 +122,7 @@ class NoteStore {
 	async deleteMass(ids) {
 		await this.#db.query(`
 			DELETE FROM notes
-			WHERE hid IN ($1)
+			WHERE hid = ANY($1)
 		`, [ids]);
 
 		return;
