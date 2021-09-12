@@ -1,6 +1,7 @@
 import React, {
 	useState,
 	useRef,
+	useEffect
 } from 'react';
 
 import { 
@@ -32,9 +33,9 @@ import Header from '../components/Header';
 import Modal from '../components/Modal';
 
 export default Note = ({route, navigation}) => {
-	var { i, save:onSave } = route.params;
+	var { note: hid } = route.params;
 	
-	var [note, sNote] = useState(route.params.note)
+	var [note, sNote] = useState({})
 	var [content, sCon] = useState(note.content);
 	var [title, sTi] = useState(note.title);
 	var [lo, sLo] = useState(false);
@@ -44,6 +45,16 @@ export default Note = ({route, navigation}) => {
 	var mod = useRef();
 
 	const {height, width} = useWindowDimensions();
+
+	async function fetch() {
+		if(!hid) return;
+		sLo(true);
+		var rs = await axios.get(`/api/note/${hid}`);
+		sNote(rs.data);
+		sCon(rs.data.content);
+		sTi(rs.data.title)
+		sLo(false)
+	}
 
 	async function save() {
 		sLo(true)
@@ -64,10 +75,10 @@ export default Note = ({route, navigation}) => {
 		}
 		var rs = await axios(rq);
 		sNote(rs.data);
-		if(onSave) onSave(i);
 		sLo(false)
 		sFoc(false)
 		sSel({start: 0, end: 0})
+		return;
 	}
 
 	async function del() {
@@ -97,6 +108,14 @@ export default Note = ({route, navigation}) => {
 
 		return () => BackHandler.removeEventListener('hardwareBackPress', handle);
 	}, [title, content]));
+
+	useEffect(() => {
+		const unsubscribe = navigation.addListener('focus', () => {
+			fetch()
+		});
+
+		return unsubscribe;
+	}, [navigation])
 
 	return (
 		<View style={[
@@ -174,7 +193,7 @@ export default Note = ({route, navigation}) => {
 		)}
 		{(!foc && content?.trim()?.length > 0) && (
 			<ScrollView >
-			<Markdown style={tstyle}>
+			<Markdown style={tstyle} rules={rules}>
 			{content}
 			</Markdown>
 			</ScrollView>
@@ -218,8 +237,6 @@ const tstyle = {
 		flexShrink: 0,
 		color: '#eee',
 		width: '100%',
-		maxWidth: '100%',
-		padding: 5,
 		margin: 0,
 		elevation: 1,
 		flex: 1,
@@ -227,6 +244,30 @@ const tstyle = {
 	},
 	blockquote: {
 		backgroundColor: '#ca51',
-		borderColor: '#ccaa55'
-	}
+		borderColor: '#ccaa55',
+		marginBottom: 10
+	},
+	heading: {
+		margin: 0,
+		marginTop: 5,
+		marginBottom: 5,
+		padding: 0
+	},
+	paragraph: {
+		paddingLeft: 5
+	},
+	// em: {
+		// fontStyle: 'normal'
+	// }
+}
+
+const rules = {
+	em: (node, children, parent, styles) => (
+		<Text key={node.key} style={styles.em}>"{children}​"</Text>
+	),
+	strong: (node, children, parent, styles) => (
+		<Text key={node.key} style={styles.strong}>
+		"{children}​"
+		</Text>
+	)
 }

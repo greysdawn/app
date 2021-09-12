@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import Notes from './screens/Notes';
@@ -21,7 +21,7 @@ import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:8080';
 
 const Drawer = createDrawerNavigator();
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
 	const { height, width } = useWindowDimensions();

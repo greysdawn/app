@@ -17,6 +17,7 @@ app.post('/api/notes', async (req, res) => {
 })
 
 app.get('/api/notes', async (req, res) => {
+	console.log('get', new Date())
 	var notes = await stores.notes.getAll();
 	return res.status(200).send(notes ?? []);
 })

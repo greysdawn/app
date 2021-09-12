@@ -21,6 +21,10 @@ import {
 	MaterialIcons as MI, FontAwesome5 as FA5
 } from '@expo/vector-icons';
 
+import {
+	useFocusEffect
+} from '@react-navigation/native';
+
 import NoteCard from '../components/NoteCard';
 import Modal from '../components/Modal';
 import Header from '../components/Header';
@@ -31,11 +35,9 @@ import axios from 'axios';
 export default function Notes(props) {
 	const { width } = useWindowDimensions();
 	const { navigation } = props;
-	
-	var [text, setText] = useState(null);
+
 	var [list, setList] = useState([]);
 	var [cedit, sCed] = useState(null);
-	var [fetched, sF] = useState(false);
 	var [mod, sMod] = useState(false);
 	var [bs, sBs] = useState(false);
 
@@ -46,11 +48,12 @@ export default function Notes(props) {
 	var [refr, sRefr] = useState(false);
 
 	useEffect(() => {
-		if(!fetched) {
-			refetch();
-			sF(true);
-		}
-	})
+		const unsubscribe = navigation.addListener('focus', () => {
+			refetch()
+		});
+
+		return unsubscribe;
+	}, [navigation])
 
 	async function refetch() {
 		sRefr(true);
@@ -70,7 +73,6 @@ export default function Notes(props) {
 
 		l.push(rq.data);
 		setList(l);
-		setText(null);
 		fl.current.scrollToEnd()
 	}
 
@@ -83,7 +85,6 @@ export default function Notes(props) {
 
 	async function clear() {
 		sCed(null);
-		setText(null)
 		setList([]);
 		await axios.delete('/api/notes');
 	}
@@ -103,16 +104,9 @@ export default function Notes(props) {
 
 	function startEdit(ind) {
 		navigation.navigate("Note", {
-			note: list[ind],
-			i: ind,
-			save
+			note: list[ind].hid
 		})
 		BS?.current?.hide();
-	}
-
-	function save(index) {
-		refetch()
-		if(index && list[index]) fl.current.scrollToIndex({index});
 	}
 
 	function toggleModal(val) {
@@ -163,9 +157,7 @@ export default function Notes(props) {
 					return (
 						<Pressable onLongPress={() => callBS(index)}
 							onPress={() => navigation.navigate('Note', {
-								note: item,
-								i: index,
-								save
+								note: item.hid
 							})}>
 							<NoteCard m={item} />
 						</Pressable>
@@ -179,9 +171,7 @@ export default function Notes(props) {
 				<Pressable onPress={(e) => {
 					fab?.current?.close(e);
 					navigation.navigate("Note", {
-						note: {},
-						i: list.length,
-						save
+						note: ''
 					});
 				}}>
 				<MI name='notes'
