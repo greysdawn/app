@@ -1,14 +1,11 @@
 require('dotenv').config();
 
 const express = require('express');
-const { Pool } = require('pg');
-const fs = require('fs');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const db = new Pool();
 const stores = require('./stores/__db')();
 
 app.post('/api/notes', async (req, res) => {
@@ -49,4 +46,9 @@ app.delete('/api/notes', async (req, res) => {
 	return res.status(200).send()
 })
 
-app.listen(8080)
+app.delete('/api/notes/mass', async (req, res) => {
+	await stores.notes.deleteMass(req.body);
+	return res.status(200).send()
+})
+
+app.listen(process.env.PORT || 8080)
