@@ -6,6 +6,7 @@ import {
   useWindowDimensions,
   StatusBar as SB
 } from 'react-native';
+import 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -49,7 +50,7 @@ export default function App() {
     <Drawer.Screen name="Test" options={{headerShown: false}} component={Test} />
     <Drawer.Screen name="Test2" options={{headerShown: false}} component={Test} />
     </Drawer.Navigator>
-    <SB barStyle={"light-content"} translucent={true}/>
+    <SB barStyle={"light-content"} translucent={true} backgroundColor="#111111"/>
     </NavigationContainer>
     </SafeAreaProvider>
   );
