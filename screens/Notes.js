@@ -239,7 +239,7 @@ export default function Notes(props) {
 					callMod();
 				}} underlayColor='#444'>
 				<View style={[styles.bsBtns, {width}]}>
-				<Octicons name='trashcan' size={20} style={{
+				<Octicons name='trash' size={20} style={{
 					color: '#eee',
 					marginRight: 5
 				}} />
