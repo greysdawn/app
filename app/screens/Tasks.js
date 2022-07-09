@@ -21,14 +21,26 @@ import {
 	MaterialIcons as MI, FontAwesome5 as FA5
 } from '@expo/vector-icons';
 
-import NoteCard from '../components/NoteCard';
+import TaskCard from '../components/TaskCard';
 import Modal from '../components/Modal';
 import Header from '../components/Header';
 import BottomSheet from '../components/BottomSheet';
 import FAM from '../components/FloatingActionMenu';
 import axios from 'axios';
 
-export default function Notes(props) {
+function EmptyItem({item}) {
+	return (
+      // Flat List Item
+      <Text
+        // style={styles.emptyListStyle}
+        // onPress={() => getItem(item)}
+      >
+        Nothing here 👻
+      </Text>
+    );
+}
+
+export default function Tasks(props) {
 	const { width } = useWindowDimensions();
 	const { navigation } = props;
 
@@ -52,14 +64,14 @@ export default function Notes(props) {
 
 	async function refetch() {
 		sRefr(true);
-		var d = await axios.get('/api/notes');
+		var d = await axios.get('/api/tasks');
 		setList(d.data);
 		sRefr(false);
 	}
 
 	async function del(ind) {
 		var k = list[ind].hid;
-		await axios.delete('/api/note/'+k);
+		await axios.delete('/api/task/'+k);
 		refetch()
 		BS?.current?.hide();
 	}
@@ -67,7 +79,7 @@ export default function Notes(props) {
 	async function clear() {
 		sCed(null);
 		setList([]);
-		await axios.delete('/api/notes');
+		await axios.delete('/api/tasks');
 	}
 
 	function callBS(ind) {
@@ -84,7 +96,7 @@ export default function Notes(props) {
 	}
 
 	function startEdit(ind) {
-		navigation.navigate("Note", {
+		navigation.navigate("Task", {
 			note: list[ind].hid
 		})
 		BS?.current?.hide();
@@ -113,7 +125,7 @@ export default function Notes(props) {
 	}
 
 	async function delSelected() {
-		await axios.delete('/api/notes/mass', {
+		await axios.delete('/api/tasks/mass', {
 			data: [sel.map(s => list[s].hid)]
 		});
 
@@ -124,7 +136,7 @@ export default function Notes(props) {
 	return (
 		<View style={styles.container}>	
 			<Header 
-				title="Notes"
+				title="Tasks"
 				navigation={props.navigation}
 			>
 				<DBtn show={callMod}/>
@@ -135,8 +147,8 @@ export default function Notes(props) {
 				)}
 			</Header>
 			<Modal ref={Mod}>
-				{sel && (<Text style={{color: '#eee'}}>Are you sure you want to delete the selected note(s)?</Text>)}
-				{(!sel && cedit !== null) && (<Text style={{color: '#eee'}}>Are you sure you want to delete this note?</Text>)}
+				{sel && (<Text style={{color: '#eee'}}>Are you sure you want to delete the selected task(s)?</Text>)}
+				{(!sel && cedit !== null) && (<Text style={{color: '#eee'}}>Are you sure you want to delete this task?</Text>)}
 				{(!sel && cedit == null) && (<Text style={{color: '#eee'}}>Are you sure you want to delete everything?</Text>)}
 				<View style={{
 					flexDirection: 'row',
@@ -195,13 +207,14 @@ export default function Notes(props) {
 				ref={fl}
 				onRefresh={() => refetch()}
 				refreshing={refr}
+				ListEmptyComponent={EmptyListMessage}
 			/>
 			<FAM ref={fab}>
 				<Pressable onPress={(e) => {
 					sSel(null)
 					fab?.current?.close(e);
-					navigation.navigate("Note", {
-						note: ''
+					navigation.navigate("Task", {
+						task: ''
 					});
 				}}>
 				<MI name='notes'
@@ -222,7 +235,7 @@ export default function Notes(props) {
 					textAlign: 'left',
 					width
 				}}>
-					{list[cedit]?.title ?? "Untitled Note"}
+					{list[cedit]?.title ?? "Untitled Task"}
 				</Text>
 				<TouchableHighlight onPress={() => {
 					startEdit(cedit)

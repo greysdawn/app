@@ -2,13 +2,21 @@ const map = function(data, offset) {
 	return Object.keys(data).map((k, i) => k+"=$"+(i+offset)).join(",");
 }
 
-class Note {
-	id;
-	hid;
-	title;
-	content;
-	created;
-	edited;
+const Priorities = {
+	Urgent: 'urgent',
+	High: 'high',
+	Medium: 'medium',
+	Low: 'low',
+	None: 'none'
+}
+
+/*
+	Checklist schema:
+	name text,
+	done boolean
+*/
+
+class Task {
 	#store;
 	
 	constructor(store, data) {
@@ -29,7 +37,8 @@ class Note {
 	}
 }
 
-class NoteStore {
+class TaskStore {
+	Priorities = Priorities;
 	#db;
 
 	constructor(db) {
@@ -38,54 +47,72 @@ class NoteStore {
 
 	async init() {
 		await this.#db.query(`
-			create table if not exists notes (
+			create table if not exists tasks (
 				id serial primary key,
 				hid text unique,
 				title text,
 				content text,
+				checklist jsonb,
+				priority text,
+				tags integer[],
+				due_date timestamptz,
 				created timestamptz,
-				edited timestamptz
+				edited timestamptz,
+				done boolean
 			)
 		`)
 	}
 
 	async create(data) {
+		var checklist;
+		if(data.checklist) {
+			if(typeof data.checklist == 'string')
+				checklist = data.checklist;
+			else checklist = JSON.stringify(data.checklist);
+		}
 		var data = await this.#db.query(`
-			INSERT INTO notes (
+			INSERT INTO tasks (
 				hid,
 				title,
 				content,
+				checklist,
+				priority,
+				tags,
+				due_date,
 				created
-			) VALUES (find_unique('notes'),$1,$2,$3)
+			) VALUES (find_unique('notes'),$1,$2,$3,$4,$5,$6,$7)
 			RETURNING *
-		`, [data.title, data.content, new Date()])
+		`, [data.title, data.content, checklist,
+			data.priority ?? Priorities.None, data.tags ?? [],
+			data.due_date, new Date()])
 
-		return new Note(this, data.rows[0]);
+		return new Task(this, data.rows[0]);
 	}
 
 	async get(hid) {
 		var data = await this.#db.query(`
-			SELECT * FROM notes
+			SELECT * FROM tasks
 			WHERE hid = $1
 		`, [hid]);
+		console.log(data)
 
-		if(data?.rows?.[0]) return new Note(this, data.rows[0]);
+		if(data?.rows?.[0]) return new Task(this, data.rows[0]);
 		else return undefined;
 	}
 
 	async getAll() {
 		var data = await this.#db.query(`
-			SELECT * FROM notes
+			SELECT * FROM tasks
 			ORDER BY id ASC
 		`);
 
-		if(data?.rows?.[0]) return data.rows.map(m => new Note(this, m));
+		if(data?.rows?.[0]) return data.rows.map(m => new Task(this, m));
 		else return undefined;
 	}
 
 	async update(hid, data) {
 		await this.#db.query(`
-			UPDATE notes
+			UPDATE tasks
 			SET ${map(data, 2)}
 			WHERE hid = $1
 		`,[hid, ...Object.values(data)]);
@@ -95,7 +122,7 @@ class NoteStore {
 
 	async delete(hid) {
 		await this.#db.query(`
-			DELETE FROM notes
+			DELETE FROM tasks
 			WHERE hid = $1
 		`, [hid]);
 
@@ -104,7 +131,7 @@ class NoteStore {
 
 	async deleteAll(id) {
 		await this.#db.query(`
-			DELETE FROM notes
+			DELETE FROM tasks
 		`);
 
 		return;
@@ -112,7 +139,7 @@ class NoteStore {
 
 	async deleteMass(ids) {
 		await this.#db.query(`
-			DELETE FROM notes
+			DELETE FROM tasks
 			WHERE hid = ANY($1)
 		`, [ids]);
 
@@ -120,4 +147,4 @@ class NoteStore {
 	}
 }
 
-module.exports = (db) => new NoteStore(db);
+module.exports = (db) => new TaskStore(db);
