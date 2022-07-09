@@ -69,7 +69,7 @@ class TaskStore {
 			if(typeof data.checklist == 'string')
 				checklist = data.checklist;
 			else checklist = JSON.stringify(data.checklist);
-		}
+		} else checklist = JSON.stringify([])
 		var data = await this.#db.query(`
 			INSERT INTO tasks (
 				hid,
