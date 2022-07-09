@@ -14,12 +14,15 @@ import { NavigationContainer } from '@react-navigation/native';
 
 import Notes from './screens/Notes';
 import Note from './screens/Note';
+import Tasks from './screens/Tasks';
+import Task from './screens/Task';
+
 import DrawerContent from './components/Drawer';
 import Header from './components/Header';
 import BottomSheet from './components/BottomSheet';
 
 import axios from 'axios';
-axios.defaults.baseURL = 'https://notes.greysdawn.com';
+axios.defaults.baseURL = 'http://10.212.250.186:8080';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -47,7 +50,7 @@ export default function App() {
       drawerContent={(props) => (<DrawerContent {...props} />)}
     >
     <Drawer.Screen name="Notes" options={{headerShown: false}} component={NoteNav} />
-    <Drawer.Screen name="Test" options={{headerShown: false}} component={Test} />
+    <Drawer.Screen name="Tasks" options={{headerShown: false}} component={TaskNav} />
     <Drawer.Screen name="Test2" options={{headerShown: false}} component={Test} />
     </Drawer.Navigator>
     <SB barStyle={"light-content"} translucent={true} backgroundColor="#111111"/>
@@ -87,6 +90,26 @@ function NoteNav() {
       options={{
         headerShown: false
       }} component={Note} />
+    </Stack.Group>
+    </Stack.Navigator>
+  )
+}
+
+function TaskNav() {
+  return (
+    <Stack.Navigator
+      initialRouteName="TaskList"
+      screenOptions={{
+        // presentation:"modal",
+        animation: "slide_from_right"
+      }}
+    >
+    <Stack.Group>
+      <Stack.Screen name="TaskList" options={{headerShown: false}} component={Tasks} />
+      <Stack.Screen name="Task"
+      options={{
+        headerShown: false
+      }} component={Task} />
     </Stack.Group>
     </Stack.Navigator>
   )

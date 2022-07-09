@@ -70,6 +70,7 @@ class TaskStore {
 				checklist = data.checklist;
 			else checklist = JSON.stringify(data.checklist);
 		} else checklist = JSON.stringify([])
+		console.log(checklist, data)
 		var data = await this.#db.query(`
 			INSERT INTO tasks (
 				hid,
@@ -94,7 +95,7 @@ class TaskStore {
 			SELECT * FROM tasks
 			WHERE hid = $1
 		`, [hid]);
-		console.log(data)
+		console.log(data.rows[0])
 
 		if(data?.rows?.[0]) return new Task(this, data.rows[0]);
 		else return undefined;
@@ -111,6 +112,13 @@ class TaskStore {
 	}
 
 	async update(hid, data) {
+		var checklist;
+		if(data.checklist) {
+			if(typeof data.checklist == 'string')
+				checklist = data.checklist;
+			else checklist = JSON.stringify(data.checklist);
+		} else checklist = JSON.stringify([])
+		data.checklist = checklist;
 		await this.#db.query(`
 			UPDATE tasks
 			SET ${map(data, 2)}

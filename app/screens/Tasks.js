@@ -97,7 +97,7 @@ export default function Tasks(props) {
 
 	function startEdit(ind) {
 		navigation.navigate("Task", {
-			note: list[ind].hid
+			task: list[ind].hid
 		})
 		BS?.current?.hide();
 	}
@@ -139,12 +139,21 @@ export default function Tasks(props) {
 				title="Tasks"
 				navigation={props.navigation}
 			>
+			<View style={{
+				flex: 1,
+				flexDirection: 'row',
+				marginLeft: 'auto',
+				alignItems: 'center',
+				justifyContent: 'flex-end'
+			}}>
+				<NBtn navigation={navigation}/>
 				<DBtn show={callMod}/>
 				{sel && (
 					<Pressable onPress={() => clearSelect()}>
 					<MI name="cancel" size={20} style={{color: '#eee', marginLeft: 5, marginRight: 5}} />
 					</Pressable>
 				)}
+			</View>
 			</Header>
 			<Modal ref={Mod}>
 				{sel && (<Text style={{color: '#eee'}}>Are you sure you want to delete the selected task(s)?</Text>)}
@@ -168,14 +177,6 @@ export default function Tasks(props) {
 				</View>
 			</Modal>
 			<FlatList
-				keyExtractor={(item) => item.hid}
-				getItemLayout = {(data, index) => (
-					{
-						length: 47,
-						offset: index * 47,
-						index
-					}
-				)}
 				contentContainerStyle={{
 					alignItems: 'stretch'
 				}}
@@ -192,39 +193,24 @@ export default function Tasks(props) {
 									if(sel.includes(index)) removeSelect(index);
 									else addSelect(index);
 								} else {
-									navigation.navigate('Note', {
-										note: item.hid
+									navigation.navigate('Task', {
+										task: item.hid
 									})}
 							}} style={{
 								flexDirection: 'row',
 								alignItems: 'center'
 							}}>
 							{(sel) && (<MI name={sel.includes(index) ? "check-box" : "check-box-outline-blank"} size={20} style={{color: '#eee', margin: 5}} />)}
-							<NoteCard m={item} />
+							<TaskCard m={item} bottom={(index + 1) == list.length} />
 						</Pressable>
 					)
 				}}
 				ref={fl}
 				onRefresh={() => refetch()}
 				refreshing={refr}
-				ListEmptyComponent={EmptyListMessage}
+				ListEmptyComponent={EmptyItem}
+				ItemSeparatorComponent={() => null}
 			/>
-			<FAM ref={fab}>
-				<Pressable onPress={(e) => {
-					sSel(null)
-					fab?.current?.close(e);
-					navigation.navigate("Task", {
-						task: ''
-					});
-				}}>
-				<MI name='notes'
-					style={[styles.icon, {
-						marginBottom: 5
-					}]}
-					size={60}
-				/>
-				</Pressable>
-			</FAM>
 			<BottomSheet ref={BS}>
 				<Text style={{
 					color: '#eee',
@@ -252,7 +238,7 @@ export default function Tasks(props) {
 					callMod();
 				}} underlayColor='#444'>
 				<View style={[styles.bsBtns, {width}]}>
-				<Octicons name='trash' size={20} style={{
+				<FA5 name='trash-alt' size={20} style={{
 					color: '#eee',
 					marginRight: 5
 				}} />
@@ -278,12 +264,29 @@ export default function Tasks(props) {
 function DBtn(props) {
 	return (
 		<Pressable onPress={() => props.show()} style={{
-			marginLeft: 'auto'
+			// marginLeft: 'auto'
 		}}>
 			<FA5 name='trash-alt' size={20} style={{
 				marginRight: 10,
 				color: '#eee',
 			}} />
+		</Pressable>
+	)
+}
+
+function NBtn({navigation}) {
+	return (
+		<Pressable onPress={(e) => {
+				navigation.navigate("Task", {
+					task: ''
+				});
+			}}>
+			<AntDesign name='plussquareo'
+				style={[styles.icon, {
+					marginRight: 10
+				}]}
+				size={20}
+			/>
 		</Pressable>
 	)
 }
@@ -307,7 +310,8 @@ const styles = StyleSheet.create({
   },
   list: {
   	width: '100%',
-  	paddingBottom: 40
+  	paddingBottom: 5
+  	// backgroundColor: '#333'
   },
   bsBtns: {
 		width: '100%',

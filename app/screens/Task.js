@@ -15,7 +15,8 @@ import {
 	BackHandler,
 	StatusBar,
 	ActivityIndicator,
-	ScrollView
+	ScrollView,
+	FlatList
 } from 'react-native';
 
 import {
@@ -32,6 +33,18 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 
+function EmptyItem({item}) {
+	return (
+      // Flat List Item
+      <Text
+        style={styles.empty}
+        // onPress={() => getItem(item)}
+      >
+        Nothing here 👻
+      </Text>
+    );
+}
+
 export default Task = ({route, navigation}) => {
 	var { task: hid } = route.params;
 	
@@ -43,6 +56,8 @@ export default Task = ({route, navigation}) => {
 	var [foc, sFoc] = useState(false);
 
 	var mod = useRef();
+	var fl = useRef();
+	console.log(cl)
 
 	const {width} = useWindowDimensions();
 
@@ -199,9 +214,56 @@ export default Task = ({route, navigation}) => {
 		)}
 		<View>
 			<Text style={{
-				fontSize: 20
+				...styles.tit,
+				paddingLeft: 10
 			}}>Checklist</Text>
-			{cl.length && ()}
+			<FlatList
+				keyExtractor={(item) => item.name}
+				getItemLayout = {(data, index) => (
+					{
+						length: 47,
+						offset: index * 47,
+						index
+					}
+				)}
+				contentContainerStyle={{
+					alignItems: 'stretch'
+				}}
+				style={styles.list}
+				data={cl}
+				renderItem={({item, index}) => {
+					return (
+						<View>
+							<Text>{item.name}</Text>
+						</View>
+					)
+					// return (
+					// 	<Pressable onLongPress={() => {
+					// 		if(!sel) callBS(index);
+					// 		else return;
+					// 	}}
+					// 		onPress={() => {
+					// 			if(sel) {
+					// 				if(sel.includes(index)) removeSelect(index);
+					// 				else addSelect(index);
+					// 			} else {
+					// 				navigation.navigate('Note', {
+					// 					note: item.hid
+					// 				})}
+					// 		}} style={{
+					// 			flexDirection: 'row',
+					// 			alignItems: 'center'
+					// 		}}>
+					// 		{(sel) && (<MI name={sel.includes(index) ? "check-box" : "check-box-outline-blank"} size={20} style={{color: '#eee', margin: 5}} />)}
+					// 		<NoteCard m={item} />
+					// 	</Pressable>
+					// )
+				}}
+				ref={fl}
+				// onRefresh={() => refetch()}
+				// refreshing={refr}
+				ListEmptyComponent={EmptyItem}
+			/>
 		</View>
 		</View>
 		</View>
@@ -223,6 +285,7 @@ const styles = SS.create({
 		paddingTop: 20,
 		borderColor: '#ffffff05',
 		borderBottomWidth: 2,
+		color: '#eee'
 	},
 	btn: {
 	  	width: '30%',
@@ -235,6 +298,11 @@ const styles = SS.create({
 	  	borderRadius: 10,
 	  	alignItems: 'center'
 	},
+	empty: {
+		color: '#eee',
+		padding: 5,
+		fontSize: 15
+	}
 })
 
 const tstyle = {
